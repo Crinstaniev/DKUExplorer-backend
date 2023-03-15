@@ -11,12 +11,22 @@
     <div>
       <label for="label-input">Label:</label>
       <input type="text" id="label-input" v-model="label" />
-      <button @click="saveImageSample">Save</button>
+      <button @click="saveImageSample">Submit</button>
+    </div>
+    <div id="annotation">
+      <h3>Annotation Info</h3>
+      <p>Bbox x: {{ startX / canvasWidth }}</p>
+      <p>Bbox y: {{ startY / canvasHeight }}</p>
+      <p>Bbox width: {{ (endX - startX) / canvasWidth }}</p>
+      <p>Bbox height: {{ (endY - startY) / canvasHeight }}</p>
+      <p>Label: {{ label }}</p>
     </div>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   data() {
     return {
@@ -84,6 +94,12 @@ export default {
     },
     handleMouseUp(event) {
       this.isDrawing = false;
+      if (this.startX > this.endX) {
+        [this.startX, this.endX] = [this.endX, this.startX];
+      }
+      if (this.startY > this.endY) {
+        [this.startY, this.endY] = [this.endY, this.startY];
+      }
     },
     saveImageSample() {
       if (this.startX > this.endX) {
@@ -92,14 +108,15 @@ export default {
       if (this.startY > this.endY) {
         [this.startY, this.endY] = [this.endY, this.startY];
       }
-
       const bboxX = this.startX / this.canvasWidth;
       const bboxY = this.startY / this.canvasHeight;
       const bboxWidth = (this.endX - this.startX) / this.canvasWidth;
       const bboxHeight = (this.endY - this.startY) / this.canvasHeight;
       const imageContent = this.canvas.toDataURL("image/png");
+      // convert to base64 string
+      const base64ImageContent = imageContent.split(",")[1];
       const newImageSample = {
-        image_content: imageContent,
+        image_content: base64ImageContent,
         bbox_x: bboxX,
         bbox_y: bboxY,
         bbox_width: bboxWidth,
@@ -122,25 +139,16 @@ export default {
         return;
       }
 
-      alert(
-        "Ready to save image sample?" +
-          "\n" +
-          "Bbox x: " +
-          newImageSample.bbox_x +
-          "\n" +
-          "Bbox y: " +
-          newImageSample.bbox_y +
-          "\n" +
-          "Bbox width: " +
-          newImageSample.bbox_width +
-          "\n" +
-          "Bbox height: " +
-          newImageSample.bbox_height +
-          "\n" +
-          "Label: " +
-          newImageSample.label +
-          "\n"
-      );
+      axios
+        .post("http://localhost:8080/image_samples", newImageSample)
+        .then((res) => {
+          console.log(res);
+          alert("Image sample saved successfully");
+        })
+        .catch((err) => {
+          console.log(err);
+          alert("Error saving image sample");
+        });
     },
   },
 };
@@ -171,6 +179,17 @@ form {
 
 label {
   font-size: 1.2rem;
+}
+
+input[type="file"] {
+  padding: 0.5rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 0.5rem rgba(0, 0, 0, 0.2);
+  transition: box-shadow 0.2s ease-in-out;
 }
 
 input[type="text"] {

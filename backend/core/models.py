@@ -8,7 +8,7 @@ db = SQLAlchemy()
 class ImageSample(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     upload_time = db.Column(db.DateTime, default=datetime.utcnow())
-    image_content = db.Column(db.LargeBinary)
+    image_content = db.Column(db.String(1024 * 1024 * 10))
     bbox_x = db.Column(db.Float)
     bbox_y = db.Column(db.Float)
     bbox_width = db.Column(db.Float)

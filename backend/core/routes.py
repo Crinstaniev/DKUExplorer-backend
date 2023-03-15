@@ -4,15 +4,16 @@ from flask import Blueprint, Flask, jsonify, request, current_app
 from flask_sqlalchemy import SQLAlchemy
 from core.models import ImageSample, db
 from core.utils.helper_functions import hex_to_byte
+from flask_cors import cross_origin
 
 bp = Blueprint('main', __name__)
-
 
 @bp.route('/')
 def index():
     return "Hello, this is DKUAR Backend!"
 
 @bp.route('/health')
+@cross_origin()
 def health():
     return jsonify({
         'status': 'OK',
@@ -22,11 +23,12 @@ def health():
 
 
 @bp.route('/image_samples', methods=['POST'])
+@cross_origin()
 def create_image_sample():
     # Create new image sample
     data = request.get_json()
     new_image_sample = ImageSample(
-        image_content=hex_to_byte(data['image_content']),
+        image_content=data['image_content'],
         bbox_x=data['bbox_x'],
         bbox_y=data['bbox_y'],
         bbox_width=data['bbox_width'],
